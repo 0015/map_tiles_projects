@@ -1,0 +1,24 @@
+description: Board Support Package (BSP) for Waveshare ESP32-S3-Touch-AMOLED-1.75
+version: "1.0.1"
+url: https://www.waveshare.com/esp32-s3-touch-amoled-1.75.htm
+repository: git://github.com/waveshareteam/Waveshare-ESP32-components.git
+tags: [bsp]
+targets: [esp32s3]
+
+dependencies:
+  espressif/esp_codec_dev:
+    version: "^1.3.3"
+    public: true
+  espressif/esp_io_expander_tca9554:
+    version: "^2"
+    public: true
+  espressif/esp_lcd_panel_io_additions: "^1"
+  espressif/esp_lvgl_port:
+    version: "^2"
+    public: true
+  idf: ">=5.3"
+  lvgl/lvgl:
+    public: true
+  waveshare/esp_lcd_sh8601: "*"
+  waveshare/esp_lcd_touch_cst9217: "*"
+  i2c_bus: "*"

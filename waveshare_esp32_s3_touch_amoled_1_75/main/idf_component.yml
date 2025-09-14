@@ -1,0 +1,9 @@
+## IDF Component Manager Manifest File
+dependencies:
+  ## Required IDF version
+  idf:
+    version: '>=4.1.0'
+  lvgl/lvgl:
+    version: 9.3.0
+    public: true
+  0015/map_tiles: ^1.2.0

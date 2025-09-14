@@ -1,0 +1,7 @@
+## IDF Component Manager Manifest File
+dependencies:
+  lvgl/lvgl:
+    version: 9.3.0
+    public: true
+  waveshare/esp32_p4_wifi6_touch_lcd_xc: ^0.0.1
+  0015/map_tiles: ^1.2.0
