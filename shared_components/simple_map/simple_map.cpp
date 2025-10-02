@@ -67,6 +67,7 @@ bool SimpleMap::init(lv_obj_t* parent_screen) {
     lv_obj_set_scroll_dir(map_container, LV_DIR_ALL);
     lv_obj_add_flag(map_container, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_border_width(map_container, 0, 0);
+    lv_obj_set_style_radius(map_container, 0, 0);
     lv_obj_add_event_cb(map_container, map_scroll_event_cb, LV_EVENT_SCROLL_END, NULL);
     lv_obj_add_event_cb(map_container, map_scroll_event_cb, LV_EVENT_SCROLL, NULL);
     lv_obj_set_style_bg_color(map_container, lv_color_black(), 0);
@@ -213,94 +214,64 @@ void SimpleMap::load_map_tiles() {
         return;
     }
     
-    is_loading = true;  // Set loading flag
+    is_loading = true;
     printf("SimpleMap: Starting tile loading...\n");
     
     // Show loading popup
     show_loading_popup();
     
+    // Use a single-shot timer with longer delay to reduce CPU pressure
     lv_timer_create([](lv_timer_t *t) {
-        lv_timer_del(t);
+        lv_timer_del(t);  // Delete this timer immediately
+        
         uint32_t start_time = esp_timer_get_time() / 1000;
         
-        // Get current tile position (this is already the top-left tile position)
+        // Get current tile position
         int tx, ty;
         map_tiles_get_position(map_handle, &tx, &ty);
         
         printf("SimpleMap: Loading %dx%d grid at position (%d,%d) at zoom %d\n", 
                grid_cols, grid_rows, tx, ty, map_tiles_get_zoom(map_handle));
         
-        // Don't clear the old tiles - keep them visible while new ones load
-        // This provides a better user experience by avoiding blank screens
+        // Disable automatic invalidation during bulk updates
+        lv_obj_add_flag(map_group, LV_OBJ_FLAG_HIDDEN);
         
-        // Add a subtle visual indication that loading is in progress
-        // by adding a thin border to tiles that are about to be updated
-        for (int i = 0; i < tile_count; i++) {
-            if (tile_widgets[i]) {
-                lv_obj_set_style_border_width(tile_widgets[i], 1, 0);
-                lv_obj_set_style_border_color(tile_widgets[i], lv_color_make(100, 100, 255), 0);
-                lv_obj_set_style_border_opa(tile_widgets[i], LV_OPA_30, 0);
-            }
-        }
-        
-        // Use cached grid dimensions for better performance
-        // Load grid of tiles starting from the top-left position
+        // Load grid of tiles - minimize style changes
         for (int row = 0; row < grid_rows; row++) {
             for (int col = 0; col < grid_cols; col++) {
                 int index = row * grid_cols + col;
-                int tile_x = tx + col;  // Start from top-left tile position
+                int tile_x = tx + col;
                 int tile_y = ty + row;
                 
                 // Load tile from SD card
                 bool loaded = map_tiles_load_tile(map_handle, index, tile_x, tile_y);
                 
                 if (loaded) {
-                    // Get the tile image data and set it to the widget
+                    // Get the tile image data and set it
                     lv_image_dsc_t* tile_img = map_tiles_get_image(map_handle, index);
                     if (tile_img && tile_img->data) {
                         lv_image_set_src(tile_widgets[index], (const void *)tile_img);
-                        // Clear background color and loading indication since we have valid image data
+                        // Only clear background if we have valid image
                         lv_obj_set_style_bg_opa(tile_widgets[index], LV_OPA_TRANSP, 0);
-                        lv_obj_set_style_border_width(tile_widgets[index], 0, 0);
-                    } else {
-                        // Keep old image if new tile data is invalid, but show a subtle indication
-                        // Only show placeholder if there was no previous image
-                        const void* current_src = lv_image_get_src(tile_widgets[index]);
-                        if (!current_src) {
-                            lv_obj_set_style_bg_color(tile_widgets[index], lv_color_make(150, 150, 150), 0);
-                            lv_obj_set_style_bg_opa(tile_widgets[index], LV_OPA_COVER, 0);
-                        }
-                        lv_obj_set_style_border_width(tile_widgets[index], 0, 0);
                     }
-                } else {
-                    // Keep old image if tile failed to load, but show a subtle indication
-                    // Only show error placeholder if there was no previous image
-                    const void* current_src = lv_image_get_src(tile_widgets[index]);
-                    if (!current_src) {
-                        lv_obj_set_style_bg_color(tile_widgets[index], lv_color_make(255, 200, 200), 0);
-                        lv_obj_set_style_bg_opa(tile_widgets[index], LV_OPA_50, 0);  // Semi-transparent error indicator
-                    }
-                    lv_obj_set_style_border_width(tile_widgets[index], 0, 0);
                 }
             }
         }
         
+        // Re-enable visibility and trigger single invalidation
+        lv_obj_clear_flag(map_group, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_invalidate(map_group);  // Single invalidation instead of continuous ones
+        
         uint32_t end_time = esp_timer_get_time() / 1000;
         printf("SimpleMap: Tile loading completed in %lu ms\n", end_time - start_time);
         
-        // Invalidate the entire map group once for better performance
-        if (map_group) {
-            lv_obj_invalidate(map_group);
-        }
-        
-        // Hide loading popup after tiles are loaded
+        // Hide loading popup
         hide_loading_popup();
         
         // Clear loading flag
         is_loading = false;
-    }, 50, NULL);
-    
-    
+        
+    }, 50, NULL);  // Increased delay to reduce CPU pressure
 }
 
 void SimpleMap::map_scroll_event_cb(lv_event_t *e)
@@ -399,6 +370,7 @@ void SimpleMap::create_input_panel(lv_obj_t* parent_screen)
     lv_obj_add_event_cb(lat_textarea, textarea_event_cb, LV_EVENT_FOCUSED, NULL);
     lv_obj_add_event_cb(lat_textarea, textarea_event_cb, LV_EVENT_DEFOCUSED, NULL);
     lv_obj_add_event_cb(lat_textarea, textarea_event_cb, LV_EVENT_READY, NULL);
+    lv_obj_set_style_anim_time(lat_textarea, 0, LV_PART_CURSOR);
 
     // Create longitude label and textarea
     lv_obj_t* lon_label = lv_label_create(input_panel);
@@ -414,6 +386,7 @@ void SimpleMap::create_input_panel(lv_obj_t* parent_screen)
     lv_obj_add_event_cb(lon_textarea, textarea_event_cb, LV_EVENT_FOCUSED, NULL);
     lv_obj_add_event_cb(lon_textarea, textarea_event_cb, LV_EVENT_DEFOCUSED, NULL);
     lv_obj_add_event_cb(lon_textarea, textarea_event_cb, LV_EVENT_READY, NULL);
+    lv_obj_set_style_anim_time(lon_textarea, 0, LV_PART_CURSOR);
 
     // Create zoom label and slider
     zoom_label = lv_label_create(input_panel);
