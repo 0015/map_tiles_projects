@@ -2,6 +2,13 @@
 
 This project demonstrates how to use the **0015__map_tiles** component([ESP Registry](https://components.espressif.com/components/0015/map_tiles)) across multiple independent ESP-IDF projects. It showcases different use cases of interactive map display on ESP32 devices with LVGL 9.x, providing complete examples of GPS-based map navigation with various interaction patterns.
 
+<div align="center">
+
+[![espressif_esp32_p4_function_ev_board](./misc/espressif_esp32_p4_function_ev_board_demo.gif)](https://youtu.be/Kyjf24e-Poo)
+<p>esp32_p4_function_ev_board</p>
+</div>
+
+
 ## Project Structure
 
 This contains ESP-IDF projects that share a common map component:
@@ -13,6 +20,11 @@ map_tiles_projects/
 │       ├── simple_map.hpp
 │       ├── simple_map.cpp
 │       └── CMakeLists.txt
+├── espressif_esp32_p4_function_ev_board/   # Demo for espressif_esp32_p4_function_ev_board
+│   ├── main/
+│   │   ├── main.cpp
+│   │   └── CMakeLists.txt
+│   └── CMakeLists.txt
 ├── waveshare_esp32_s3_touch_amoled_1_75/   # Demo for waveshare_esp32_s3_touch_amoled_1_75
 │   ├── main/
 │   │   ├── main.cpp
