@@ -1,0 +1,61 @@
+# Espressif IoT Development Framework (ESP-IDF) project configuration
+#
+# Waveshare ESP32-S3-Touch-AMOLED-1.75, offline navigation.
+# Delete sdkconfig and rebuild after changing anything here.
+
+CONFIG_IDF_TARGET="esp32s3"
+
+# 16 MB flash. The app is around 820 KB, which the default single-app table's
+# 1 MB would hold with very little room to spare; partitions.csv gives it 6 MB.
+CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="16MB"
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+CONFIG_COMPILER_OPTIMIZATION_PERF=y
+
+# Octal PSRAM, 8 MB, at 80 MHz rather than the 40 MHz default.
+#
+# Every frame copies up to 3x3 tiles out of PSRAM into the LVGL draw buffer, so
+# this is the single setting that most affects how smoothly the map moves. A
+# larger data cache with 64-byte lines is worth as much again, because the tile
+# blit is a long sequential read.
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_OCT=y
+CONFIG_SPIRAM_SPEED_80M=y
+CONFIG_SPIRAM_MALLOC_RESERVE_INTERNAL=32768
+CONFIG_ESP32S3_DATA_CACHE_64KB=y
+CONFIG_ESP32S3_DATA_CACHE_LINE_64B=y
+CONFIG_ESP32S3_INSTRUCTION_CACHE_32KB=y
+
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=10240
+CONFIG_FREERTOS_HZ=1000
+
+# Long filenames on the card.
+#
+# With FatFs restricted to 8.3 names a tile folder called "tiles_tahoe" - which
+# is what the packager writes when you name it that - cannot be opened at all,
+# and the map comes up blank with no error worth reading.
+CONFIG_FATFS_LFN_HEAP=y
+CONFIG_FATFS_MAX_LFN=255
+CONFIG_FATFS_ALLOC_PREFER_EXTRAM=y
+
+# LVGL. CLIB malloc puts widget allocations on the ordinary heap, which can
+# spill into PSRAM, instead of LVGL's fixed internal pool.
+CONFIG_LV_USE_CLIB_MALLOC=y
+CONFIG_LV_USE_CLIB_STRING=y
+CONFIG_LV_USE_CLIB_SPRINTF=y
+CONFIG_LV_DEF_REFR_PERIOD=20
+CONFIG_LV_FONT_MONTSERRAT_12=y
+CONFIG_LV_FONT_MONTSERRAT_14=y
+CONFIG_LV_FONT_MONTSERRAT_16=y
+CONFIG_LV_FONT_MONTSERRAT_20=y
+CONFIG_LV_FONT_MONTSERRAT_28=y
+CONFIG_LV_FONT_DEFAULT_MONTSERRAT_14=y
+CONFIG_LV_TXT_BREAK_CHARS=" ,.;:-_"
+
+# The BSP renders in 100-line slices: 466 x 100 x 2 B = 93 KB of internal RAM.
+# Fewer lines means less RAM and more passes over the same scene, which on this
+# CPU costs more than it saves.
+CONFIG_BSP_DISPLAY_LVGL_BUF_HEIGHT=100

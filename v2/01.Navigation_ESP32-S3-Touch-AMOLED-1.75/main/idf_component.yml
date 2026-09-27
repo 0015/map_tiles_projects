@@ -1,0 +1,18 @@
+## IDF Component Manager Manifest File
+dependencies:
+  idf: ">=5.3"
+
+  lvgl/lvgl:
+    version: 9.3.0
+    public: true
+
+  waveshare/esp32_s3_touch_amoled_1_75: "^1.0.0"
+
+  # v2.0.0 adds the navigation layer - map_geo / map_route / map_tile_cache /
+  # map_view - alongside the v1 API, which is unchanged.
+  #
+  # Working on map_tiles itself? Build against a checkout of it instead:
+  #   0015/map_tiles:
+  #     version: "^2.0.0"
+  #     override_path: /path/to/map_tiles
+  0015/map_tiles: "^2.0.0"

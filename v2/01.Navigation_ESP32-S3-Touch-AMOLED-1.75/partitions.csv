@@ -1,0 +1,7 @@
+# Name,   Type, SubType, Offset,  Size, Flags
+# The app is around 820 KB and the default single-app table allows 1 MB, which
+# leaves no room to grow. Tiles and routes live on the SD card, so nothing else
+# here needs the flash.
+nvs,      data, nvs,     0x9000,  0x6000,
+phy_init, data, phy,     0xf000,  0x1000,
+factory,  app,  factory, 0x10000, 6M,
